@@ -10,7 +10,7 @@ struct Data {
 };
 typedef struct Data Data;
 
-void free_cringe_ptr(void*, size_t);
+char* realloc_cringe_ptr(void*, size_t, size_t);
 
 void print_and_transform(Data* data) {
     printf("[C Land] Received message: ");
@@ -18,14 +18,11 @@ void print_and_transform(Data* data) {
         printf("%c", data->message[i]);
     }
     printf("\n");
-    printf("[C Land] Copying new message...\n");
     const char* returned_message = "Hello world from C! (and thanks for visiting!)";
     size_t returned_length = strlen(returned_message);
-    char* new_ptr = malloc(returned_length * sizeof(char));
-    char* old_ptr = data->message;
-    data->message = new_ptr;
-    printf("[C Land] Freeing cringe ptr...\n");
-    free_cringe_ptr(old_ptr, data->length);
+    printf("[C Land] Reallocating cringe ptr...\n");
+    data->message = realloc_cringe_ptr(data->message, data->length, returned_length);
+    printf("[C Land] Copying new message...\n");
     for (size_t i = 0; i < returned_length; i++) {
         data->message[i] = returned_message[i];
     }
