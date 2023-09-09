@@ -1,3 +1,3 @@
-fn main(){
-    println!("cargo:rustc-link-lib=static={}", "c-land"); 
+fn main() {
+    println!("cargo:rustc-link-search=../c-land");
 }

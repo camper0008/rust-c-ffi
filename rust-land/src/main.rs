@@ -7,37 +7,35 @@ struct Data {
     length: usize,
 }
 
-extern "C" { fn print_and_transform(data: *mut Data); }
+#[link(name = "c-land", kind = "static")]
+extern "C" {
+    fn print_and_transform(data: *mut Data);
+}
 
 #[no_mangle]
 pub extern "C" fn realloc_cringe_ptr(ptr: *mut u8, old_len: usize, new_len: usize) -> *mut u8 {
     println!("[Rust Land] Reallocating cringe ptr...");
-    unsafe {
-        std::alloc::realloc(ptr, Layout::from_size_align_unchecked(old_len, 1), new_len)
-    }
+    unsafe { std::alloc::realloc(ptr, Layout::from_size_align_unchecked(old_len, 1), new_len) }
 }
 
 fn main() {
-    let original_message = b"Hello world from rust!";
+    let message = b"Hello world from rust!";
+    let length = message.len();
     let message = unsafe {
-        std::alloc::alloc(Layout::from_size_align_unchecked(original_message.len(), 1))
+        let message_ptr = std::alloc::alloc(Layout::from_size_align_unchecked(length, 1));
+        std::ptr::copy_nonoverlapping(message as *const _, message_ptr, length);
+        message_ptr
     };
 
-    (0..original_message.len()).for_each(|i| {
-        unsafe {
-            *message.offset(i as isize) = original_message[i];
-        }
-    });
-    
-    let data = Box::new(Data {length: original_message.len(), message});
+    let data = Box::new(Data { length, message });
     let data = Box::into_raw(data);
     unsafe {
         print_and_transform(data);
         print!("[Rust Land] Received transformed message: ");
         let data = Box::from_raw(data);
-        (0..data.length).for_each(|i| {
-            print!("{}", *data.message.offset(i as isize) as char);
-        });
+        (0..data.length)
+            .map(|i| *data.message.offset(i as isize) as char)
+            .for_each(|c| print!("{c}"));
         println!();
     }
 }
